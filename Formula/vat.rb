@@ -6,28 +6,27 @@
 class Vat < Formula
   desc "Control plane for multi-repo workspaces, with a knowledge layer that expires"
   homepage "https://github.com/takealook97/vat"
-  version "0.1.1"
   license "MIT"
 
   on_macos do
     on_arm do
-      url "https://github.com/takealook97/vat/releases/download/v0.1.1/vat_darwin_arm64.tar.gz"
-      sha256 "fe47361060b573a87e17a51ad73380a9d6da9575c12eb70108d352f86925ae0d"
+      url "https://github.com/takealook97/vat/releases/download/v0.1.0/vat_darwin_arm64.tar.gz"
+      sha256 "f43cad5d4789a4e4ba3911d4f1725d8162735b6e4c75201edee28f1f410b8ac0"
     end
     on_intel do
-      url "https://github.com/takealook97/vat/releases/download/v0.1.1/vat_darwin_amd64.tar.gz"
-      sha256 "f4f89afd142e0f6c757dba3eb81deb85a418ced33b508dcb0f5ed7c951d6a7d5"
+      url "https://github.com/takealook97/vat/releases/download/v0.1.0/vat_darwin_amd64.tar.gz"
+      sha256 "9bf9db33e08eea8d34ec1484b724da059f9a5308ae963445aee1d34bee729328"
     end
   end
 
   on_linux do
     on_arm do
-      url "https://github.com/takealook97/vat/releases/download/v0.1.1/vat_linux_arm64.tar.gz"
-      sha256 "6909a295c0f743f493303394ce210fa80824baa7429119edb19575602be350bc"
+      url "https://github.com/takealook97/vat/releases/download/v0.1.0/vat_linux_arm64.tar.gz"
+      sha256 "130f59ef3bc2e5b34bf7eb4d74df6699555259d1e1e7fb534ce9d2909b3460e5"
     end
     on_intel do
-      url "https://github.com/takealook97/vat/releases/download/v0.1.1/vat_linux_amd64.tar.gz"
-      sha256 "5a3d1b3dbbe42bdd5ffd25547fde5d9ee26b10b39c0ef6df670af032639467fa"
+      url "https://github.com/takealook97/vat/releases/download/v0.1.0/vat_linux_amd64.tar.gz"
+      sha256 "71fdc48de4815b95fcceb5a1b8cf57ec391f5b09d746d92601d8ac4169a800fd"
     end
   end
 
@@ -46,7 +45,7 @@ class Vat < Formula
     (testpath/"payments").mkpath
     system "git", "-C", testpath/"payments", "init", "--quiet"
     system bin/"vat", "init", "--name", "acme", "--adopt"
-    assert_predicate testpath/"vat.yaml", :exist?
+    assert_path_exists testpath/"vat.yaml"
     assert_match "acme", (testpath/"vat.yaml").read
   end
 end
