@@ -1,0 +1,110 @@
+name: bump-vat
+
+on:
+  schedule:
+    - cron: "7 * * * *"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release tag to pin (e.g. v0.8.0). Empty means latest release."
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+concurrency:
+  group: bump-vat
+  cancel-in-progress: false
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve target release
+        id: target
+        env:
+          GH_TOKEN: ${{ github.token }}
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          if [ -n "${INPUT_VERSION:-}" ]; then
+            tag="$INPUT_VERSION"
+          else
+            tag="$(gh api repos/takealook97/vat/releases/latest --jq .tag_name)"
+          fi
+          case "$tag" in v*) ;; *) tag="v$tag" ;; esac
+          if ! printf '%s' "$tag" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "unexpected tag: $tag" >&2
+            exit 1
+          fi
+          current="$(grep -Eo 'releases/download/v[0-9]+\.[0-9]+\.[0-9]+/' Formula/vat.rb | sort -u | sed -E 's#releases/download/(v[^/]+)/#\1#')"
+          if [ "$(printf '%s\n' "$current" | wc -l)" -ne 1 ]; then
+            echo "Formula/vat.rb does not pin a single version: $current" >&2
+            exit 1
+          fi
+          echo "current=$current target=$tag"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "current=$current" >> "$GITHUB_OUTPUT"
+          if [ "$current" = "$tag" ]; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Rewrite formula
+        if: steps.target.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.target.outputs.tag }}
+          CURRENT: ${{ steps.target.outputs.current }}
+        run: |
+          set -euo pipefail
+          work="$(mktemp -d)"
+          gh release download "$TAG" -R takealook97/vat -p checksums.txt -D "$work"
+          f=Formula/vat.rb
+          for asset in vat_darwin_arm64 vat_darwin_amd64 vat_linux_arm64 vat_linux_amd64; do
+            sum="$(awk -v n="${asset}.tar.gz" '$2 == n { print $1 }' "$work/checksums.txt")"
+            if ! printf '%s' "$sum" | grep -Eq '^[0-9a-f]{64}$'; then
+              echo "missing checksum for $asset" >&2
+              exit 1
+            fi
+            # Replace the url line for this asset, then the sha256 line right after it.
+            awk -v asset="$asset" -v tag="$TAG" -v sum="$sum" '
+              pending && /^[[:space:]]*sha256 "/ {
+                sub(/sha256 "[0-9a-f]+"/, "sha256 \"" sum "\"")
+                pending = 0
+              }
+              index($0, "/" asset ".tar.gz\"") && /^[[:space:]]*url "/ {
+                sub(/releases\/download\/v[0-9]+\.[0-9]+\.[0-9]+\//, "releases/download/" tag "/")
+                pending = 1
+              }
+              { print }
+            ' "$f" > "$f.tmp"
+            mv "$f.tmp" "$f"
+            grep -q "releases/download/$TAG/$asset.tar.gz" "$f"
+            grep -q "sha256 \"$sum\"" "$f"
+          done
+          if grep -q "releases/download/$CURRENT/" "$f"; then
+            echo "old version still referenced" >&2
+            exit 1
+          fi
+          git diff --stat
+
+      - name: Check formula syntax
+        if: steps.target.outputs.changed == 'true'
+        run: ruby -c Formula/vat.rb
+
+      - name: Commit and push
+        if: steps.target.outputs.changed == 'true'
+        env:
+          TAG: ${{ steps.target.outputs.tag }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Formula/vat.rb
+          git commit -m "bump vat to $TAG"
+          git push origin HEAD:main
