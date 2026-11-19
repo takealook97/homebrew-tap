@@ -10,23 +10,23 @@ class Vat < Formula
 
   on_macos do
     on_arm do
-      url "https://github.com/takealook97/vat/releases/download/v0.8.1/vat_darwin_arm64.tar.gz"
-      sha256 "807d7fdfe5bfc070a22cd67f81f0756312931ca0197a06dc6bc9da295a3c8ef9"
+      url "https://github.com/takealook97/vat/releases/download/v0.8.2/vat_darwin_arm64.tar.gz"
+      sha256 "0c6e2154423c10c2fe36f1ebf540ca4422020c8492634ae07ac2c512892c5fdd"
     end
     on_intel do
-      url "https://github.com/takealook97/vat/releases/download/v0.8.1/vat_darwin_amd64.tar.gz"
-      sha256 "d39d680c97acefc478fb31783b5b11976de4dd7446779eca390160a9622ac640"
+      url "https://github.com/takealook97/vat/releases/download/v0.8.2/vat_darwin_amd64.tar.gz"
+      sha256 "fcc470c689d70db47afb7371f0807e74195babac019d55e37765495727a69191"
     end
   end
 
   on_linux do
     on_arm do
-      url "https://github.com/takealook97/vat/releases/download/v0.8.1/vat_linux_arm64.tar.gz"
-      sha256 "ed983ac67f276d0f54d83a224658b27b985152592e336552e89d6148b80d5218"
+      url "https://github.com/takealook97/vat/releases/download/v0.8.2/vat_linux_arm64.tar.gz"
+      sha256 "060a0579a333fe62ec8f9b4f41dcb484ef5988b39dfe0d4d21f5f514d32011e7"
     end
     on_intel do
-      url "https://github.com/takealook97/vat/releases/download/v0.8.1/vat_linux_amd64.tar.gz"
-      sha256 "d65fc25048b9219fa67589895f379c0dd32969586138f229a048ca5c4044620d"
+      url "https://github.com/takealook97/vat/releases/download/v0.8.2/vat_linux_amd64.tar.gz"
+      sha256 "c1cb80501ab42fa99176408cf31119ef0673c023d0d290ca326b088a9cfc1aab"
     end
   end
 
